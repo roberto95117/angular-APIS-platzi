@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 
-import { Product } from '../../models/product.model';
+import { Product, CreateProductDto, UpdateProductDto } from '../../models/product.model';
 
 import { StoreService } from '../../services/store.service';
 import { ProductsService } from '../../services/products.service';
@@ -15,7 +15,19 @@ export class ProductsComponent implements OnInit {
   myShoppingCart: Product[] = [];
   total = 0;
   products: Product[] = [];
-
+  showProductsDetail : boolean = false;
+  productChosen : Product = {
+    id: '',
+    price: 0,
+    images: [],
+    title: '',
+    category: {
+      id : '',
+      name : ''
+    },
+    description: ''
+  };
+  offset = 0;
   constructor(
     private storeService: StoreService,
     private productsService: ProductsService
@@ -23,16 +35,71 @@ export class ProductsComponent implements OnInit {
     this.myShoppingCart = this.storeService.getShoppingCart();
   }
 
+  limit = 5;
+
   ngOnInit(): void {
-    this.productsService.getAllProducts()
-    .subscribe(data => {
-      this.products = data;
-    });
+    this.load();
   }
 
   onAddToShoppingCart(product: Product) {
     this.storeService.addProduct(product);
     this.total = this.storeService.getTotal();
+  }
+
+  toggleProductDetail(){
+    this.showProductsDetail = !this.showProductsDetail;
+  }
+
+  onShowDetail(id : string){
+    this.productsService.getProduct(id)
+    .subscribe((data : any) => {
+      this.toggleProductDetail();
+      this.productChosen = data;
+    });
+  }
+
+  createNewProduct(){
+    const product: CreateProductDto = {
+      title: 'Nueo producto',
+      description: 'bla bla bla ',
+      images: [`https://placeimg.com/640/480/any?random=${Math.random()}`],
+      price: 1000,
+      categoryId: 1
+    }
+    this.productsService.create(product)
+    .subscribe((res) => {
+      this.products.unshift(res);
+    });
+  }
+
+  updateProduct(){
+    const changes : UpdateProductDto = {
+      title: 'nuevo titulo',
+    };
+
+    this.productsService.update(this.productChosen.id, changes)
+    .subscribe((res) => {
+      const index = this.products.findIndex(item => item.id === this.productChosen.id);
+      this.products[index] = res;
+      this.toggleProductDetail();
+    });
+  }
+
+  deleteProduct(){
+    this.productsService.delete(this.productChosen.id)
+    .subscribe((res) => {
+      const index = this.products.findIndex(item => item.id === this.productChosen.id);
+      this.products.splice(index,1);
+      this.toggleProductDetail();
+    });
+  }
+
+  load(){
+    this.productsService.getAllByPage(this.limit,this.offset)
+    .subscribe(data => {
+      this.products = this.products.concat(data);
+      this.offset += this.limit;
+    });
   }
 
 }

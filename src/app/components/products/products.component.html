@@ -1,7 +1,25 @@
+<button (click)="createNewProduct()">clic</button>
+<button (click)="load()">load</button>
 <div class="products--grid">
   <app-product
     [product]="product"
     *ngFor="let product of products"
     (addedProduct)="onAddToShoppingCart($event)"
+    (showProduct)="onShowDetail($event)"
   ></app-product>
+</div>
+<div class="product-detail" [class.active]="showProductsDetail">
+  <div  *ngIf="productChosen">
+    <button (click)="toggleProductDetail()">close</button>
+    <h1> {{productChosen.title}} </h1>
+    <swiper
+      [slidesPerView]="1"
+      >
+      <ng-template swiperSlide *ngFor="let item of productChosen.images">
+        <img [src]="item" alt="180">
+      </ng-template>
+    </swiper>
+    <button (click)="updateProduct()">editar</button>
+    <button (click)="deleteProduct()">eliminar</button>
+  </div>
 </div>
