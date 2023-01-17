@@ -4,6 +4,8 @@ import { Product, CreateProductDto, UpdateProductDto } from '../../models/produc
 
 import { StoreService } from '../../services/store.service';
 import { ProductsService } from '../../services/products.service';
+import { switchMap } from 'rxjs/operators';
+import { zip } from 'rxjs';
 
 @Component({
   selector: 'app-products',
@@ -105,6 +107,25 @@ export class ProductsComponent implements OnInit {
     .subscribe(data => {
       this.products = this.products.concat(data);
       this.offset += this.limit;
+    });
+  }
+
+  readAndUpdate(id: string){
+    this.productsService.getProduct(id)
+    .pipe(
+      switchMap((product: any) => {
+        return this.productsService.update(product.id, {title : 'nuevo'})
+      })
+    ).subscribe((data) => {
+      console.log(data);
+    });
+
+    zip(
+      this.productsService.getProduct(id),
+      this.productsService.update(id, {title : 'nuevo'})
+    ).subscribe(response => {
+      const read = response[0];
+      const update = response[1];
     });
   }
 
