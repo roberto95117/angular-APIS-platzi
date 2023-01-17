@@ -3,7 +3,7 @@ import { HttpClient, HttpErrorResponse, HttpParams, HttpStatusCode } from '@angu
 
 import { Product, CreateProductDto } from './../models/product.model';
 
-import { catchError, retry } from 'rxjs/operators';
+import { catchError, map, retry } from 'rxjs/operators';
 import { throwError } from 'rxjs';
 
 @Injectable({
@@ -23,7 +23,15 @@ export class ProductsService {
       params = params.set('limit', limit);
       params = params.set('offset', offset);
     }
-    return this.http.get<Product[]>(`${this.URL}products`, {params});
+    return this.http.get<Product[]>(`${this.URL}products`, {params})
+    .pipe(
+      map(products => products.map( item => {
+        return {
+          ...item,
+          taxes: .19 * item.price
+        }
+      }))
+    );
   }
 
   getProduct(id: string){
