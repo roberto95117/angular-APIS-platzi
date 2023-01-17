@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpParams, HttpStatusCode } from '@angular/common/http';
 
 import { Product, CreateProductDto } from './../models/product.model';
 
-import { retry } from 'rxjs/operators';
+import { catchError, retry } from 'rxjs/operators';
+import { throwError } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -26,7 +27,19 @@ export class ProductsService {
   }
 
   getProduct(id: string){
-    return this.http.get<Product[]>(`${this.URL}products/${id}`);
+    return this.http.get<Product[]>(`${this.URL}products/${id}`)
+    .pipe(
+      catchError((error : HttpErrorResponse) => {
+        if(error.status === HttpStatusCode .InternalServerError){
+          return throwError('Error en el servidor');
+        }else if (error.status === HttpStatusCode.NotFound){
+          return throwError('No existe ');
+        }else if (error.status === HttpStatusCode.Unauthorized){
+          return throwError('No tienes permiso para ver este recurso');
+        }
+        return throwError('algo salio mal');
+      })
+    );
   }
 
   create(data : CreateProductDto){
