@@ -5,6 +5,7 @@ import { Product, CreateProductDto } from './../models/product.model';
 
 import { catchError, map, retry } from 'rxjs/operators';
 import { throwError } from 'rxjs';
+import { checkTime } from '../interceptors/time.interceptor';
 
 @Injectable({
   providedIn: 'root'
@@ -69,7 +70,7 @@ export class ProductsService {
   }
 
   getAllProductsRetry() {
-    return this.http.get<Product[]>(`${this.URL}products/`)
+    return this.http.get<Product[]>(`${this.URL}products/`, {context : checkTime()})
       .pipe(retry(3));
   }
 
