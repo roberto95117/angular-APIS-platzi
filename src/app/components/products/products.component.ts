@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 
 import { Product, CreateProductDto, UpdateProductDto } from '../../models/product.model';
 
@@ -12,11 +12,18 @@ import { zip } from 'rxjs';
   templateUrl: './products.component.html',
   styleUrls: ['./products.component.scss']
 })
-export class ProductsComponent implements OnInit {
+export class ProductsComponent {
 
   myShoppingCart: Product[] = [];
   total = 0;
-  products: Product[] = [];
+  @Input() products: Product[] = [];
+  @Input()
+  set productId(id : string | null){
+    if(id){
+      this.onShowDetail(id);
+    }
+  }
+  @Output() loadEvent: EventEmitter<any> = new EventEmitter();
   showProductsDetail : boolean = false;
   productChosen : Product = {
     id: '',
@@ -29,19 +36,13 @@ export class ProductsComponent implements OnInit {
     },
     description: ''
   };
-  offset = 0;
+
   statusDetail: 'loading' | 'success' | 'error' | 'init' = 'init';
   constructor(
     private storeService: StoreService,
     private productsService: ProductsService
   ) {
     this.myShoppingCart = this.storeService.getShoppingCart();
-  }
-
-  limit = 5;
-
-  ngOnInit(): void {
-    this.load();
   }
 
   onAddToShoppingCart(product: Product) {
@@ -57,7 +58,10 @@ export class ProductsComponent implements OnInit {
     this.statusDetail = 'loading';
     this.productsService.getProduct(id)
     .subscribe((data : any) => {
-      this.toggleProductDetail();
+      //this.toggleProductDetail();
+      if(!this.showProductsDetail){
+        this.showProductsDetail = true;
+      }
       this.productChosen = data;
       this.statusDetail = 'success';
     }, error => {
@@ -102,13 +106,6 @@ export class ProductsComponent implements OnInit {
     });
   }
 
-  load(){
-    this.productsService.getAllByPage(this.limit,this.offset)
-    .subscribe(data => {
-      this.products = this.products.concat(data);
-      this.offset += this.limit;
-    });
-  }
 
   readAndUpdate(id: string){
     this.productsService.getProduct(id)
@@ -127,6 +124,10 @@ export class ProductsComponent implements OnInit {
       const read = response[0];
       const update = response[1];
     });
+  }
+
+  load(){
+    this.loadEvent.emit();
   }
 
 }
