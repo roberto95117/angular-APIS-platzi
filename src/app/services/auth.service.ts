@@ -1,16 +1,20 @@
-import { tap } from 'rxjs/operators';
+import { tap, switchMap } from 'rxjs/operators';
 import { User } from './../models/user.model';
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Auth } from '../models/auth.model';
 import { TokenService } from './token.service';
+import { BehaviorSubject } from 'rxjs/internal/BehaviorSubject';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
 
-  URL : string = 'https://young-sands-07814.herokuapp.com/api/users';
+  URL : string = 'http://damp-spire-59848.herokuapp.com/api/users';
+  private user = new BehaviorSubject<User | null>(null);
+
+  user$ = this.user.asObservable();
 
   constructor(
     private http : HttpClient,
@@ -31,6 +35,13 @@ export class AuthService {
       /*headers : {
         Authorization : `Bearer ${token}`
       }*/
-    });
+    }).pipe
+    (
+      tap(user => this.user.next(user))
+    );
+  }
+
+  logout(){
+    this.tokenSrv.removeToken();
   }
 }

@@ -1,24 +1,32 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 
 import { Product } from './models/product.model';
 import { AuthService } from './services/auth.service';
 import { UsersService } from './services/users.service';
+import { TokenService } from './services/token.service';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
-export class AppComponent {
+export class AppComponent implements OnInit{
   imgParent = '';
   showImg = true;
   token = "";
 
   constructor(
     private authSrv : AuthService,
-    private userSrv : UsersService
+    private userSrv : UsersService,
+    private tokenSrv: TokenService
   ){
 
+  }
+  ngOnInit(): void {
+    const token = this.tokenSrv.getToken();
+    if(token){
+      this.authSrv.profile().subscribe();
+    }
   }
 
   onLoaded(img: string) {
@@ -62,6 +70,10 @@ export class AppComponent {
       console.log('upload', rta)
       this.imgRta = rta.location;
     })*/
+  }
+
+  logout(){
+    this.authSrv.logout();
   }
 
 
